@@ -34,6 +34,8 @@ namespace Lab06
 
         Model bunny;
 
+        int technique = 0;
+
         public Lab06()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -102,12 +104,16 @@ namespace Lab06
                 }
             }
 
+            if (Keyboard.GetState().IsKeyDown(Keys.D1)) technique = 0;
+            if (Keyboard.GetState().IsKeyDown(Keys.D2)) technique = 1;
+            if (Keyboard.GetState().IsKeyDown(Keys.D3)) technique = 2;
+
             Matrix rot = Matrix.CreateRotationX(angle.X) * Matrix.CreateRotationY(angle.Y);
 
-            cameraPos = Vector3.Transform(new Vector3(0,0,-10), rot);
+            cameraPos = Vector3.Transform(new Vector3(0,0,-10), rot) + new Vector3(0,3,0);
             view = Matrix.CreateLookAt(
                 cameraPos,
-                new Vector3(0, 0, 0),
+                new Vector3(0, 3, 0),
                 new Vector3(0, 1, 0)
             );
 
@@ -120,7 +126,7 @@ namespace Lab06
 
             skybox.Draw(view, projection);
 
-            effect.CurrentTechnique = effect.Techniques[2];
+            effect.CurrentTechnique = effect.Techniques[technique];
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
@@ -131,7 +137,7 @@ namespace Lab06
                     {
                         GraphicsDevice.SetVertexBuffer(part.VertexBuffer);
                         GraphicsDevice.Indices = part.IndexBuffer;
-                        Matrix model = Matrix.CreateScale(0.5f) * mesh.ParentBone.Transform;
+                        Matrix model = Matrix.CreateScale(0.9f) * mesh.ParentBone.Transform;
                         effect.Parameters["Model"].SetValue(model);
                         effect.Parameters["View"].SetValue(view);
                         effect.Parameters["CameraPosition"].SetValue(cameraPos);
