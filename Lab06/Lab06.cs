@@ -33,6 +33,9 @@ namespace Lab06
         Effect effect;
 
         Model bunny;
+        Model helicopter;
+
+        Texture2D helicopterTexture;
 
         int technique = 0;
 
@@ -57,6 +60,8 @@ namespace Lab06
 
             effect = Content.Load<Effect>("ReflectRefract");
             bunny = Content.Load<Model>("Bunny");
+            helicopter = Content.Load<Model>("Helicopter");
+            helicopterTexture = Content.Load<Texture2D>("HelicopterTexture");
 
             skybox = new Skybox(skyboxTextures, Content, GraphicsDevice);
             projection = Matrix.CreatePerspectiveFieldOfView(
@@ -65,6 +70,7 @@ namespace Lab06
                     0.1f, 1000);
             effect.Parameters["Projection"].SetValue(projection);
             effect.Parameters["SkyboxTexture"].SetValue(skybox.skyboxTexture);
+            effect.Parameters["HelicopterTexture"].SetValue(helicopterTexture);
         }
 
         protected override void UnloadContent()
@@ -110,11 +116,11 @@ namespace Lab06
 
             Matrix rot = Matrix.CreateRotationX(angle.X) * Matrix.CreateRotationY(angle.Y);
 
-            cameraPos = Vector3.Transform(new Vector3(0,0,-10), rot) + new Vector3(0,3,0);
+            cameraPos = Vector3.Transform(new Vector3(0, 0, -3), rot);
             view = Matrix.CreateLookAt(
                 cameraPos,
-                new Vector3(0, 3, 0),
-                new Vector3(0, 1, 0)
+                Vector3.Zero,
+                Vector3.Up
             );
 
             base.Update(gameTime);
@@ -129,20 +135,21 @@ namespace Lab06
             effect.CurrentTechnique = effect.Techniques[technique];
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
-                pass.Apply();
+                
 
-                foreach (ModelMesh mesh in bunny.Meshes)
+                foreach (ModelMesh mesh in helicopter.Meshes)
                 {
                     foreach (ModelMeshPart part in mesh.MeshParts)
                     {
+
                         GraphicsDevice.SetVertexBuffer(part.VertexBuffer);
                         GraphicsDevice.Indices = part.IndexBuffer;
-                        Matrix model = Matrix.CreateScale(0.9f) * mesh.ParentBone.Transform;
+                        Matrix model = mesh.ParentBone.Transform;
                         effect.Parameters["Model"].SetValue(model);
                         effect.Parameters["View"].SetValue(view);
                         effect.Parameters["CameraPosition"].SetValue(cameraPos);
                         effect.Parameters["iorRatio"].SetValue(1.0003f / 1.05f);
-
+                        pass.Apply();
                         GraphicsDevice.DrawIndexedPrimitives(
                             PrimitiveType.TriangleList,
                             part.VertexOffset,
