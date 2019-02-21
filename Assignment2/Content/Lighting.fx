@@ -229,16 +229,16 @@ float4 ToonPS(ToonVertexOutput input) : COLOR
 	float3 N = normalize(input.Normal);
 	float3 R = reflect(-L, N);
 
-	float D = saturate(dot(L, N)) * oodist2 * LightStrength * float4(LightColor, 1.0);
-	float S = pow(saturate(dot(R, V)), Shininess) * oodist2 * LightStrength * float4(LightColor, 1.0);
+	float D = saturate(dot(L, N)) * oodist2 * LightStrength;
+	float S = pow(saturate(dot(R, V)), Shininess) * oodist2 * LightStrength;
 
 	col += AmbientColor * AmbientIntensity;
 
 	if (D > 0.7) {
-		col += DiffuseIntensity * DiffuseColor;
+		col += DiffuseIntensity * DiffuseColor * float4(LightColor, 1.0);
 	}
 	else if (D > 0.15) {
-		col += DiffuseIntensity * DiffuseColor * 0.22;
+		col += DiffuseIntensity * DiffuseColor * float4(LightColor, 1.0) * 0.22;
 	}
 
 	if (S > 0.45) {

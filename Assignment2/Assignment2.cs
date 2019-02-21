@@ -2,13 +2,14 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using SimpleEngine;
 
-namespace Assignment1
+namespace Assignment2
 {
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
-    public class Assignment1 : Game
+    public class Assignment2 : Game
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -31,6 +32,15 @@ namespace Assignment1
         float diffuseIntensity = 0.8f;
         float shininess = 20.0f;
 
+        float reflectivity = 1.0f;
+        float fresPower = 5.0f;
+        float fresScale = 0.96f;
+        float fresBias = 0.04f;
+        float textureMixFactor = 0.0f;
+        float etaRatio = 0.93f;
+        Vector3 dispersionEtaRatio = new Vector3(0.96f, 0.95f, 0.93f);
+
+        Effect effect;
         int technique = 0;
         string[] techniques =
         {
@@ -40,6 +50,13 @@ namespace Assignment1
             "Schlick",
             "Toon",
             "HalfLife"
+        };
+        string[] techniques2 =
+        {
+            "Reflection",
+            "Refraction",
+            "Dispersion",
+            "Fresnel + Dispersion"
         };
 
         Vector3 lightPos = new Vector3(5, 10, 8);
@@ -54,6 +71,54 @@ namespace Assignment1
         Model helicopter;
         Model currModel;
 
+        Texture2D helicopterTex;
+
+        Skybox skybox;
+        Skybox office;
+        Skybox daytime;
+        Skybox debug;
+        Skybox forest;
+
+        string[] officeTextures =
+        {
+            "skyboximages\\nvlobby_new_posx",
+            "skyboximages\\nvlobby_new_negx",
+            "skyboximages\\nvlobby_new_posy",
+            "skyboximages\\nvlobby_new_negy",
+            "skyboximages\\nvlobby_new_posz",
+            "skyboximages\\nvlobby_new_negz",
+        };
+
+        string[] daytimeTextures =
+        {
+            "skyboximages\\grandcanyon_posx",
+            "skyboximages\\grandcanyon_negx",
+            "skyboximages\\grandcanyon_posy",
+            "skyboximages\\grandcanyon_negy",
+            "skyboximages\\grandcanyon_posz",
+            "skyboximages\\grandcanyon_negz",
+        };
+
+        string[] debugTextures =
+        {
+            "skyboximages\\debug_posx",
+            "skyboximages\\debug_negx",
+            "skyboximages\\debug_posy",
+            "skyboximages\\debug_negy",
+            "skyboximages\\debug_posz",
+            "skyboximages\\debug_negz",
+        };
+
+        string[] forestTextures =
+        {
+            "skyboximages\\posx",
+            "skyboximages\\negx",
+            "skyboximages\\posy",
+            "skyboximages\\negy",
+            "skyboximages\\posz",
+            "skyboximages\\negz",
+        };
+
         Matrix view;
         Matrix projection;
 
@@ -63,7 +128,7 @@ namespace Assignment1
         bool showHelp = false;
         bool showDebug = false;
 
-        public Assignment1()
+        public Assignment2()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -93,21 +158,30 @@ namespace Assignment1
             spriteBatch = new SpriteBatch(GraphicsDevice);
             font = Content.Load<SpriteFont>("Font");
 
-            effect = Content.Load<Effect>("Lighting");
+            helicopterTex = Content.Load<Texture2D>("HelicopterTexture");
+
+            basicEffect = Content.Load<Effect>("Lighting");
+            refrafEffect = Content.Load<Effect>("ReflectRefract");
+            effect = basicEffect;
             torus = Content.Load<Model>("Torus");
-            cube = Content.Load<Model>("Cube");
+            cube = Content.Load<Model>("RealCube");
             sphere = Content.Load<Model>("Sphere");
             teapot = Content.Load<Model>("Teapot");
             bunny = Content.Load<Model>("Bunny");
+            helicopter = Content.Load<Model>("Helicopter");
             currModel = torus;
+
+            office = new Skybox(officeTextures, Content, GraphicsDevice, 512);
+            daytime = new Skybox(daytimeTextures, Content, GraphicsDevice, 512);
+            debug = new Skybox(debugTextures, Content, GraphicsDevice, 256);
+            forest = new Skybox(forestTextures, Content, GraphicsDevice, 2048);
+
+            skybox = forest;
 
             projection = Matrix.CreatePerspectiveFieldOfView(
                     MathHelper.ToRadians(90),
                     GraphicsDevice.Viewport.AspectRatio,
                     0.1f, 100);
-
-            effect.Parameters["Projection"].SetValue(projection);
-
 
             prevMouse = Mouse.GetState();
 
@@ -172,7 +246,10 @@ namespace Assignment1
             view = Matrix.CreateLookAt(
                 cameraPos,
                 offset,
-                new Vector3(0, 1, 0)
+                Vector3.Transform(
+                    new Vector3(0, 1, 0),
+                    Matrix.CreateRotationX(angle.Y) * Matrix.CreateRotationY(angle.X)
+                )
             );
 
 
@@ -182,60 +259,103 @@ namespace Assignment1
             if (Keyboard.GetState().IsKeyDown(Keys.D1))
             {
                 currModel = cube;
+                textureMixFactor = 0.0f;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.D2))
             {
                 currModel = sphere;
+                textureMixFactor = 0.0f;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.D3))
             {
                 currModel = torus;
+                textureMixFactor = 0.0f;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.D4))
             {
                 currModel = teapot;
+                textureMixFactor = 0.0f;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.D5))
             {
                 currModel = bunny;
+                textureMixFactor = 0.0f;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.D6))
+            {
+                currModel = helicopter;
+                textureMixFactor = 0.2f;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.D7))
+            {
+                skybox = debug;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.D8))
+            {
+                skybox = office;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.D9))
+            {
+                skybox = daytime;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.D0))
+            {
+                skybox = forest;
             }
 
             // CHANGE SHADER
             if (Keyboard.GetState().IsKeyDown(Keys.F1))
             {
+                effect = basicEffect;
                 technique = 0;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.F2))
             {
+                effect = basicEffect;
                 technique = 1;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.F3))
             {
+                effect = basicEffect;
                 technique = 2;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.F4))
             {
+                effect = basicEffect;
                 technique = 3;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.F5))
             {
+                effect = basicEffect;
                 technique = 4;
             }
             if (Keyboard.GetState().IsKeyDown(Keys.F6))
             {
+                effect = basicEffect;
                 technique = 5;
             }
-
-            // LIGHT CONTROLS
-            if (Keyboard.GetState().IsKeyDown(Keys.L))
+            if (Keyboard.GetState().IsKeyDown(Keys.F7))
             {
-                float decrease = 1;
-                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) || Keyboard.GetState().IsKeyDown(Keys.RightShift))
-                {
-                    decrease = -1;
-                }
-                lightStrength += 2 * decrease;
+                effect = refrafEffect;
+                technique = 0;
             }
+            if (Keyboard.GetState().IsKeyDown(Keys.F8))
+            {
+                effect = refrafEffect;
+                technique = 1;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.F9))
+            {
+                effect = refrafEffect;
+                technique = 2;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.F10))
+            {
+                effect = refrafEffect;
+                technique = 3;
+            }
+
+            // DISPERSION CONTROLS
             if (Keyboard.GetState().IsKeyDown(Keys.R))
             {
                 float decrease = 1;
@@ -243,15 +363,8 @@ namespace Assignment1
                 {
                     decrease = -1;
                 }
-                lightColor.X += 0.01f * decrease;
-                if (lightColor.X < 0)
-                {
-                    lightColor.X = 0;
-                }
-                if (lightColor.X > 1)
-                {
-                    lightColor.X = 1;
-                }
+                dispersionEtaRatio.X += 0.001f * decrease;
+                dispersionEtaRatio.X = MathHelper.Clamp(dispersionEtaRatio.X, 0, 1);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.G))
             {
@@ -260,15 +373,8 @@ namespace Assignment1
                 {
                     decrease = -1;
                 }
-                lightColor.Y += 0.01f * decrease;
-                if (lightColor.Y < 0)
-                {
-                    lightColor.Y = 0;
-                }
-                if (lightColor.Y > 1)
-                {
-                    lightColor.Y = 1;
-                }
+                dispersionEtaRatio.Y += 0.001f * decrease;
+                dispersionEtaRatio.Y = MathHelper.Clamp(dispersionEtaRatio.Y, 0, 1);
             }
             if (Keyboard.GetState().IsKeyDown(Keys.B))
             {
@@ -277,16 +383,10 @@ namespace Assignment1
                 {
                     decrease = -1;
                 }
-                lightColor.Z += 0.01f * decrease;
-                if (lightColor.Z < 0)
-                {
-                    lightColor.Z = 0;
-                }
-                if (lightColor.Z > 1)
-                {
-                    lightColor.Z = 1;
-                }
+                dispersionEtaRatio.Z += 0.001f * decrease;
+                dispersionEtaRatio.Z = MathHelper.Clamp(dispersionEtaRatio.Z, 0, 1);
             }
+
             if (Keyboard.GetState().IsKeyDown(Keys.Left))
             {
                 lightPos.X -= 0.5f;
@@ -315,36 +415,46 @@ namespace Assignment1
             // MATERIAL CONTROLS
             if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
             {
-                if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
-                {
-                    specularIntensity -= 0.01f;
-                }
-                else
-                {
-                    shininess -= 0.5f;
-                }
+                reflectivity -= 0.01f;
 
             }
             if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
             {
-                if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
-                {
-                    specularIntensity += 0.01f;
-                }
-                else
-                {
-                    shininess += 0.5f;
-                }
-
+                reflectivity += 0.01f;
             }
 
-            if (shininess < 0)
+            if (reflectivity < 0) reflectivity = 0;
+            if (reflectivity > 1.0) reflectivity = 1.0f;
+
+            // FRESNEL CONTROLS
+            if (Keyboard.GetState().IsKeyDown(Keys.Q))
             {
-                shininess = 0;
+                float decrease = 1;
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) || Keyboard.GetState().IsKeyDown(Keys.RightShift))
+                {
+                    decrease = -1;
+                }
+                fresPower += 0.01f * decrease;
             }
-            if (specularIntensity < 0)
+            if (Keyboard.GetState().IsKeyDown(Keys.W))
             {
-                specularIntensity = 0;
+                float decrease = 1;
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) || Keyboard.GetState().IsKeyDown(Keys.RightShift))
+                {
+                    decrease = -1;
+                }
+                fresScale += 0.001f * decrease;
+                fresScale = MathHelper.Clamp(fresScale, 0, 1);
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.E))
+            {
+                float decrease = 1;
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift) || Keyboard.GetState().IsKeyDown(Keys.RightShift))
+                {
+                    decrease = -1;
+                }
+                fresBias += 0.001f * decrease;
+                fresBias = MathHelper.Clamp(fresBias, 0, 1);
             }
 
             // Overlay Controls
@@ -381,15 +491,16 @@ namespace Assignment1
         {
             GraphicsDevice.Clear(Color.FromNonPremultiplied(ambientColor));
             GraphicsDevice.BlendState = BlendState.AlphaBlend;
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
+            if (effect == refrafEffect)
+            {
+                skybox.Draw(view, projection);
+            }
 
             effect.CurrentTechnique = effect.Techniques[technique];
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
-                pass.Apply();
-                GraphicsDevice.BlendState = BlendState.Opaque;
-                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-
                 foreach (ModelMesh mesh in currModel.Meshes)
                 {
                     foreach (ModelMeshPart part in mesh.MeshParts)
@@ -399,23 +510,47 @@ namespace Assignment1
                         Matrix model = mesh.ParentBone.Transform;
                         if (currModel == torus)
                         {
-                            model = Matrix.CreateScale(0.25f) * mesh.ParentBone.Transform;
+                            model *= Matrix.CreateScale(0.25f);
+                        } else if (currModel == helicopter)
+                        {
+                            model *= Matrix.CreateScale(2.0f);
+                        } else if (currModel == bunny)
+                        {
+                            model *= Matrix.CreateScale(0.5f);
                         }
                         effect.Parameters["Model"].SetValue(model);
-                        Matrix modelInverseTranspose =
-                            Matrix.Transpose(Matrix.Invert(model));
-                        effect.Parameters["ModelInverseTranspose"].SetValue(modelInverseTranspose);
-                        effect.Parameters["DiffuseColor"].SetValue(diffuseColor);
-                        effect.Parameters["AmbientColor"].SetValue(ambientColor);
-                        effect.Parameters["AmbientIntensity"].SetValue(ambientIntensity);
-                        effect.Parameters["DiffuseIntensity"].SetValue(diffuseIntensity);
-                        effect.Parameters["SpecularIntensity"].SetValue(specularIntensity);
-                        effect.Parameters["Shininess"].SetValue(shininess);
-                        effect.Parameters["LightPosition"].SetValue(lightPos);
-                        effect.Parameters["LightStrength"].SetValue(lightStrength);
-                        effect.Parameters["LightColor"].SetValue(lightColor);
+                        effect.Parameters["Projection"].SetValue(projection);
                         effect.Parameters["View"].SetValue(view);
                         effect.Parameters["CameraPosition"].SetValue(cameraPos);
+
+                        if (effect == basicEffect)
+                        {
+                            Matrix modelInverseTranspose =
+                            Matrix.Transpose(Matrix.Invert(model));
+                            effect.Parameters["ModelInverseTranspose"].SetValue(modelInverseTranspose);
+                            effect.Parameters["DiffuseColor"].SetValue(diffuseColor);
+                            effect.Parameters["AmbientColor"].SetValue(ambientColor);
+                            effect.Parameters["AmbientIntensity"].SetValue(ambientIntensity);
+                            effect.Parameters["DiffuseIntensity"].SetValue(diffuseIntensity);
+                            effect.Parameters["SpecularIntensity"].SetValue(specularIntensity);
+                            effect.Parameters["Shininess"].SetValue(shininess);
+                            effect.Parameters["LightPosition"].SetValue(lightPos);
+                            effect.Parameters["LightStrength"].SetValue(lightStrength);
+                            effect.Parameters["LightColor"].SetValue(lightColor);
+                        } else
+                        {
+                            effect.Parameters["SkyboxTexture"].SetValue(skybox.skyboxTexture);
+                            effect.Parameters["HelicopterTexture"].SetValue(helicopterTex);
+                            effect.Parameters["EtaRatio"].SetValue(etaRatio);
+                            effect.Parameters["DispersionEtaRatio"].SetValue(dispersionEtaRatio);
+                            effect.Parameters["TextureMixFactor"].SetValue(textureMixFactor);
+                            effect.Parameters["Reflectivity"].SetValue(reflectivity);
+                            effect.Parameters["FresBias"].SetValue(fresBias);
+                            effect.Parameters["FresScale"].SetValue(fresScale);
+                            effect.Parameters["FresPower"].SetValue(fresPower);
+                        }
+
+                        pass.Apply();
 
                         GraphicsDevice.DrawIndexedPrimitives(
                             PrimitiveType.TriangleList,
@@ -441,17 +576,17 @@ namespace Assignment1
                     Color.White);
                 spriteBatch.DrawString(
                     font,
-                    "1-5 keys: Change Object; F1-F6 keys: Change Lighting Model",
+                    "1-6 keys: Change Object; F1-F10 keys: Change Lighting Model",
                     new Vector2(10, 400),
                     Color.White);
                 spriteBatch.DrawString(
                     font,
-                    "L,R,G,B: Change Light Intensity/Color (Shift to Decrease)",
+                    "R,G,B: Change Dispersion Eta Ratio (Shift to Decrease)",
                     new Vector2(10, 420),
                     Color.White);
                 spriteBatch.DrawString(
                     font,
-                    "+/-: Change Specular Intensity; L-Ctrl and +/-: Change Shininess",
+                    "+/-: Change Reflectivity; Q,W,E: Change Fresnel Power, Scale, Bias (Shift to Decrease)",
                     new Vector2(10, 440),
                     Color.White);
                 spriteBatch.DrawString(
@@ -466,30 +601,60 @@ namespace Assignment1
             {
                 spriteBatch.DrawString(
                     font,
-                    "Camera Angle: " + angle + "; Dist: " + dist + "; Offset: " + offset,
+                    "Camera Angle: " + VectorToString(angle) + "; Dist: " + dist + "; Offset: " + VectorToString(offset),
                     new Vector2(10, 10),
                     Color.White);
-                spriteBatch.DrawString(
-                    font,
-                    "Light Pos: " + lightPos + "; Intensity: " + lightStrength + "; Color: (R: " + lightColor.X + ", G: " + lightColor.Y + ", B: " + lightColor.Z + ")",
-                    new Vector2(10, 30),
-                    Color.White);
-                spriteBatch.DrawString(
-                    font,
-                    "Matrial Specular Intensity: " + specularIntensity + "; Shininess: " + shininess,
-                    new Vector2(10, 50),
-                    Color.White);
-                spriteBatch.DrawString(
-                    font,
-                    "Shader Type: " + techniques[technique],
-                    new Vector2(10, 70),
-                    Color.White);
+
+                if (effect == basicEffect)
+                {
+                    spriteBatch.DrawString(
+                        font,
+                        "Light Pos: " + lightPos + "; Intensity: " + lightStrength + "; Color: (R: " + lightColor.X + ", G: " + lightColor.Y + ", B: " + lightColor.Z + ")",
+                        new Vector2(10, 30),
+                        Color.White);
+                    spriteBatch.DrawString(
+                        font,
+                        "Matrial Specular Intensity: " + specularIntensity + "; Shininess: " + shininess,
+                        new Vector2(10, 50),
+                        Color.White);
+                    spriteBatch.DrawString(
+                        font,
+                        "Shader Type: " + techniques[technique],
+                        new Vector2(10, 70),
+                        Color.White);
+                } else
+                {
+                    spriteBatch.DrawString(
+                        font,
+                        "Reflectivity: " + reflectivity + "; Fresnel Power: " + fresPower + ", Scale: " + fresScale + ", Bias: " + fresBias,
+                        new Vector2(10, 30),
+                        Color.White);
+                    spriteBatch.DrawString(
+                        font,
+                        "EtaRatio: " + etaRatio + "; Dispersion EtaRatios: " + VectorToString(dispersionEtaRatio),
+                        new Vector2(10, 50),
+                        Color.White);
+                    spriteBatch.DrawString(
+                        font,
+                        "Shader Type: " + techniques2[technique],
+                        new Vector2(10, 70),
+                        Color.White);
+                }
+                
             }
 
             spriteBatch.End();
 
             base.Draw(gameTime);
         }
+        string VectorToString(Vector2 vec)
+        {
+            return "(" + vec.X.ToString("0.00") + ", " + vec.Y.ToString("0.00") + ")";
+        }
+        string VectorToString(Vector3 vec)
+        {
+            return "(" + vec.X.ToString("0.00") + ", " + vec.Y.ToString("0.00") + ", " + vec.Z.ToString("0.00") + ")";
+        }
     }
+
 }
-    

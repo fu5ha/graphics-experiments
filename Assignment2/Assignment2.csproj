@@ -50,6 +50,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\Lighting.fx" />
+    <Content Include="Content\ReflectRefract.fx" />
+    <Content Include="Content\SkyboxEffect.fx" />
     <Content Include="Icon.ico" />
   </ItemGroup>
   <ItemGroup>

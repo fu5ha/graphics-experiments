@@ -21,13 +21,13 @@ namespace SimpleEngine
             CubeMapFace.NegativeZ,
         };
 
-        public Skybox(string[] textures, ContentManager content, GraphicsDevice g)
+        public Skybox(string[] textures, ContentManager content, GraphicsDevice g, int size)
         {
             cube = content.Load<Model>("Cube");
             effect = content.Load<Effect>("SkyboxEffect");
 
-            skyboxTexture = new TextureCube(g, 512, false, SurfaceFormat.Color);
-            byte[] data = new byte[512 * 512 * 4];
+            skyboxTexture = new TextureCube(g, size, false, SurfaceFormat.Color);
+            byte[] data = new byte[size * size * 4];
             Texture2D tempTexture;
 
             for (int i = 0; i < 6; i++)
