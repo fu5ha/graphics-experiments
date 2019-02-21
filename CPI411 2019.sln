@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game1", "Game1\Game1.csproj", "{C943F666-3582-40A0-AF56-2B7E3CED454F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab01", "Lab01\Lab01.csproj", "{A9C1E17E-2118-40B9-90CD-9E1847282318}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab02", "Lab02\Lab02.csproj", "{81443846-A814-4B6B-8A4F-ECFAC8DFC2B2}"
@@ -21,16 +19,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assignment1", "Assignment1\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab06", "Lab06\Lab06.csproj", "{7BABC3FD-155C-4EBB-B3D9-AF51FA48F8B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assignment2", "Assignment2\Assignment2.csproj", "{43F03BF6-453F-4FA6-AD0B-178A6C104148}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lab07", "Lab07\Lab07.csproj", "{AA7D2387-6730-4511-A316-35D345529B31}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C943F666-3582-40A0-AF56-2B7E3CED454F}.Debug|x86.ActiveCfg = Debug|x86
-		{C943F666-3582-40A0-AF56-2B7E3CED454F}.Debug|x86.Build.0 = Debug|x86
-		{C943F666-3582-40A0-AF56-2B7E3CED454F}.Release|x86.ActiveCfg = Release|x86
-		{C943F666-3582-40A0-AF56-2B7E3CED454F}.Release|x86.Build.0 = Release|x86
 		{A9C1E17E-2118-40B9-90CD-9E1847282318}.Debug|x86.ActiveCfg = Debug|x86
 		{A9C1E17E-2118-40B9-90CD-9E1847282318}.Debug|x86.Build.0 = Debug|x86
 		{A9C1E17E-2118-40B9-90CD-9E1847282318}.Release|x86.ActiveCfg = Release|x86
@@ -63,6 +61,14 @@ Global
 		{7BABC3FD-155C-4EBB-B3D9-AF51FA48F8B8}.Debug|x86.Build.0 = Debug|x86
 		{7BABC3FD-155C-4EBB-B3D9-AF51FA48F8B8}.Release|x86.ActiveCfg = Release|x86
 		{7BABC3FD-155C-4EBB-B3D9-AF51FA48F8B8}.Release|x86.Build.0 = Release|x86
+		{43F03BF6-453F-4FA6-AD0B-178A6C104148}.Debug|x86.ActiveCfg = Debug|x86
+		{43F03BF6-453F-4FA6-AD0B-178A6C104148}.Debug|x86.Build.0 = Debug|x86
+		{43F03BF6-453F-4FA6-AD0B-178A6C104148}.Release|x86.ActiveCfg = Release|x86
+		{43F03BF6-453F-4FA6-AD0B-178A6C104148}.Release|x86.Build.0 = Release|x86
+		{AA7D2387-6730-4511-A316-35D345529B31}.Debug|x86.ActiveCfg = Debug|x86
+		{AA7D2387-6730-4511-A316-35D345529B31}.Debug|x86.Build.0 = Debug|x86
+		{AA7D2387-6730-4511-A316-35D345529B31}.Release|x86.ActiveCfg = Release|x86
+		{AA7D2387-6730-4511-A316-35D345529B31}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

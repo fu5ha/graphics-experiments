@@ -3,12 +3,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 
-namespace Lab04
+namespace Lab07
 {
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
-    public class Lab04 : Game
+    public class Lab07 : Game
     {
         GraphicsDeviceManager graphics;
 
@@ -18,25 +18,25 @@ namespace Lab04
         KeyboardState prevKey;
 
         Vector3 cameraPos = new Vector3(0, 0, -10);
-        Vector4 diffuseColor = new Vector4(0.65f, 0.95f, 0.45f, 1);
-        Vector4 ambientColor = new Vector4(0.4f, 0.5f, 0.75f, 1);
+        Vector3 ambientColor = new Vector3(0.2f, 0.2f, 0.2f);
         float ambientIntensity = 0.25f;
-        float specularIntensity = 0.3f;
+        float specularIntensity = 0.8f;
         float diffuseIntensity = 0.8f;
         float shininess = 20.0f;
 
         int technique = 0;
 
-        Vector3 lightPos = new Vector3(5, 10, 8);
+        Vector3 lightPos = new Vector3(0, 17, 0);
 
-        Model torus;
+        Model plane;
+        Texture2D normalMap;
 
         Matrix view;
         Matrix projection;
 
         Effect effect;
 
-        public Lab04()
+        public Lab07()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -65,7 +65,8 @@ namespace Lab04
         {
 
             effect = Content.Load<Effect>("Lighting");
-            torus = Content.Load<Model>("Torus");
+            plane = Content.Load<Model>("Plane");
+            normalMap = Content.Load<Texture2D>("Round");
 
             projection = Matrix.CreatePerspectiveFieldOfView(
                     MathHelper.ToRadians(90),
@@ -73,6 +74,7 @@ namespace Lab04
                     0.1f, 100);
 
             effect.Parameters["Projection"].SetValue(projection);
+            effect.Parameters["NormalMap"].SetValue(normalMap);
 
 
             prevMouse = Mouse.GetState();
@@ -117,7 +119,10 @@ namespace Lab04
             view = Matrix.CreateLookAt(
                 cameraPos,
                 new Vector3(0, 0, 0),
-                new Vector3(0, 1, 0)
+                Vector3.Transform(
+                    new Vector3(0, 1, 0),
+                    Matrix.CreateRotationX(angle.Y) * Matrix.CreateRotationY(angle.X)
+                )
             );
 
 
@@ -166,16 +171,15 @@ namespace Lab04
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.FromNonPremultiplied(ambientColor));
+            GraphicsDevice.Clear(Color.CornflowerBlue);
             GraphicsDevice.BlendState = BlendState.AlphaBlend;
 
 
             effect.CurrentTechnique = effect.Techniques[technique];
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
-                pass.Apply();
 
-                foreach (ModelMesh mesh in torus.Meshes)
+                foreach (ModelMesh mesh in plane.Meshes)
                 {
                     foreach (ModelMeshPart part in mesh.MeshParts)
                     {
@@ -183,10 +187,6 @@ namespace Lab04
                         GraphicsDevice.Indices = part.IndexBuffer;
                         Matrix model = Matrix.CreateScale(0.25f) * mesh.ParentBone.Transform;
                         effect.Parameters["Model"].SetValue(model);
-                        Matrix modelInverseTranspose =
-                            Matrix.Transpose(Matrix.Invert(model));
-                        effect.Parameters["ModelInverseTranspose"].SetValue(modelInverseTranspose);
-                        effect.Parameters["DiffuseColor"].SetValue(diffuseColor);
                         effect.Parameters["AmbientColor"].SetValue(ambientColor);
                         effect.Parameters["AmbientIntensity"].SetValue(ambientIntensity);
                         effect.Parameters["DiffuseIntensity"].SetValue(diffuseIntensity);
@@ -195,6 +195,8 @@ namespace Lab04
                         effect.Parameters["LightPosition"].SetValue(lightPos);
                         effect.Parameters["View"].SetValue(view);
                         effect.Parameters["CameraPosition"].SetValue(cameraPos);
+
+                        pass.Apply();
 
                         GraphicsDevice.DrawIndexedPrimitives(
                             PrimitiveType.TriangleList,
