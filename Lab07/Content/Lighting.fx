@@ -9,9 +9,6 @@ float AmbientIntensity;
 float DiffuseIntensity;
 float SpecularIntensity;
 float Shininess;
-
-texture NormalMap;
-
 sampler TSampler = sampler_state {
 	texture = <NormalMap>;
 	magfilter = LINEAR;
